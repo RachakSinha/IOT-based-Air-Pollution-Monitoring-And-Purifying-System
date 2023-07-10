@@ -1,0 +1,86 @@
+#define BLYNK_TEMPLATE_ID "TMPL3dyGwqQk9"
+#define BLYNK_TEMPLATE_NAME "Air Quality Monitoring"
+#define BLYNK_AUTH_TOKEN "Jt_tUcvUTmVqkfHIkzvdsUKKTzP70Kjs"
+#define BLYNK_PRINT Serial
+#include <MQ135.h>
+#include <LiquidCrystal_I2C.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+char ssid[] = "laptop69";
+char pass[] = "Snehalraj";
+int mq135Pin = 34; // Analog input pin used to read the sensor data
+int buzzerPin = 12; // Digital output pin used to control the buzzer
+int relayPin = 17; // Digital output pin connected to the relay
+int sprayPin = 13; // Digital output pin connected to the spray module
+LiquidCrystal_I2C lcd(0x3F, 16, 2); // Set the LCD address to 0x3F and the number of
+columns and rows
+void setup()
+{
+lcd.init(); // Initialize the LCD
+lcd.backlight(); // Turn on the backlight
+pinMode(buzzerPin, OUTPUT); // Set the buzzer pin to output mode
+
+pinMode(relayPin, OUTPUT); // Set the relay pin to output mode
+pinMode(sprayPin, OUTPUT); // Set the spray pin to output mode
+Serial.begin(9600);
+Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+}
+void loop()
+{
+Blynk.run();
+int sensorValue = analogRead(mq135Pin); // Read the sensor value
+Serial.print(sensorValue);
+float voltage = sensorValue * (4.0 / 1023.0); // Convert the sensor value to voltage
+float ppm = (voltage - 0.1) * 1000 / 0.8; // Convert the voltage to PPM
+Serial.print("MQ135: ");
+Serial.print(ppm);
+Serial.println(" ppm");
+lcd.clear(); // Clear the LCD display
+lcd.setCursor(0, 0); // Set the cursor to the first column and first row
+lcd.print("MQ135: ");
+lcd.print(ppm);
+lcd.print(" ppm");
+Blynk.virtualWrite(V5, ppm); // Send the PPM value to Blynk to be displayed on the
+app
+
+if (ppm > 1000) { // If the PPM value is greater than 1000, turn on the buzzer, activate
+the relay, and spray
+digitalWrite(buzzerPin, HIGH);
+digitalWrite(relayPin, HIGH); // Turn on the relay to activate the fan
+digitalWrite(sprayPin, HIGH); // Turn on the spray module
+} else { // Otherwise, turn off the buzzer, deactivate the relay, and stop spraying
+digitalWrite(buzzerPin, LOW);
+digitalWrite(relayPin, LOW); // Turn off the relay to deactivate the fan
+digitalWrite(sprayPin, LOW); // Turn off the spray module
+}
+delay(1000);
+}
+
+
+
+-> This code is for an air quality monitoring and purifying system using an ESP32
+microcontroller, an MQ135 gas sensor, an LCD display with I2C, and various output
+modules such as a buzzer, a relay, and a spray module. The code uses the Blynk IoT
+platform to display the air quality data on a mobile app.
+In the setup() function, the LCD display is initialized, and the output pins for the buzzer,
+relay, and spray module are set to output mode. The Serial.begin() function is called to
+initialize the serial communication for debugging purposes. The Blynk.begin() function
+is called to connect the ESP32 to the Blynk server using the Wi-Fi credentials.
+In the loop() function, the Blynk.run() function is called to keep the connection to the
+Blynk server alive. The analogRead() function is used to read the sensor data from the
+MQ135 sensor connected to analog input pin 34. The sensor value is then converted to
+voltage and then to PPM (parts per million) using a conversion formula.
+The PPM value is displayed on the LCD screen and sent to the Blynk server using the
+Blynk.virtualWrite() function to be displayed on the mobile app. If the PPM value is
+greater than 1000, the buzzer is turned on, the relay is activated to turn on the fan, and
+17
+the spray module is turned on. Otherwise, the buzzer is turned off, the relay is
+deactivated to turn off the fan, and the spray module is turned off.
+The delay() function is used to add a delay of 1 second between each loop iteration to
+prevent the code from executing too quickly.
+The code was used for calibrating the sensor after running this code for few
+hours we got these valuesRezero value: 1.54
+Raw voltage: 0.00
+Gas concentration: 0.9
+Also these values are used for calculating the air quality PPM.
